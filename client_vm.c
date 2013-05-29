@@ -3,8 +3,7 @@ vm_client.c : test program for forked vm block
 
 
 */
-#include"csapp.h"
-#define MAXLINE 1024
+#include "csapp.h"
 
 static unsigned int port = 0;
 static unsigned int block_id= 0;

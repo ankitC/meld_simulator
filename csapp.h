@@ -1,3 +1,4 @@
+/* $begin csapp.h */
 #ifndef __CSAPP_H__
 #define __CSAPP_H__
 
@@ -39,11 +40,10 @@ typedef struct sockaddr SA;
 /* $begin rio_t */
 #define RIO_BUFSIZE 8192
 typedef struct {
-	    int rio_fd;                /* descriptor for this internal buf */
-		    int rio_cnt;               /* unread bytes in internal buf */
-			    char *rio_bufptr;          /* next unread byte in internal
-				buf */
-				    char rio_buf[RIO_BUFSIZE]; /* internal buffer */
+    int rio_fd;                /* descriptor for this internal buf */
+    int rio_cnt;               /* unread bytes in internal buf */
+    char *rio_bufptr;          /* next unread byte in internal buf */
+    char rio_buf[RIO_BUFSIZE]; /* internal buffer */
 } rio_t;
 /* $end rio_t */
 
@@ -97,8 +97,7 @@ void Stat(const char *filename, struct stat *buf);
 void Fstat(int fd, struct stat *buf) ;
 
 /* Memory mapping wrappers */
-void *Mmap(void *addr, size_t len, int prot, int flags, int fd, off_t
-offset);
+void *Mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset);
 void Munmap(void *start, size_t length);
 
 /* Standard I/O wrappers */
@@ -118,8 +117,7 @@ void Free(void *ptr);
 
 /* Sockets interface wrappers */
 int Socket(int domain, int type, int protocol);
-void Setsockopt(int s, int level, int optname, const void *optval, int
-optlen);
+void Setsockopt(int s, int level, int optname, const void *optval, int optlen);
 void Bind(int sockfd, struct sockaddr *my_addr, int addrlen);
 void Listen(int s, int backlog);
 int Accept(int s, struct sockaddr *addr, socklen_t *addrlen);
@@ -166,6 +164,7 @@ int open_listenfd(int portno);
 int Open_clientfd(char *hostname, int port);
 int Open_listenfd(int port); 
 
+void init_mutex();
 #endif /* __CSAPP_H__ */
 /* $end csapp.h */
 
