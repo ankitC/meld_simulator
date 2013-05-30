@@ -7,7 +7,7 @@ vm_client.c : test program for forked vm block
 
 static unsigned int port = 0;
 static unsigned int block_id= 0;
-static char host[] = "localhost";
+static char host[] = "192.168.30.159";
 static char block_header[] = "block_id";
 
 
@@ -29,7 +29,8 @@ int main (int argc , char *argv[])
 	printf("port=%d\nid=%d\n",port,block_id);
 	// communicate with server
 	clientfd = Open_clientfd(host,port);
-    Rio_readinitb(&rio,clientfd);
+	printf("Clientfd=%d for id:%d\n",clientfd,block_id);
+	Rio_readinitb(&rio,clientfd);
 
 	printf("Connection Established : block_id : %d\n",block_id);
 	

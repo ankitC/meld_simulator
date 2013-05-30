@@ -1,71 +1,156 @@
+ /* 
+ *  A server using select()
+ *  by Martin Broadhurst (www.martinbroadhurst.com)
+ */
+
+#include <stdio.h>
+#include <string.h> /* memset() */
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <netdb.h>
 #include "csapp.h"
 
-int main(int argc, char **argv)
+#define PORT    "5000" /* Port to listen on */
+#define BACKLOG     10  /* Passed to listen() */
+
+
+void fork_clients(int num){
+
+	char* port="5000";
+	char countbuf[MAXLINE];
+	char* path[3];
+	path[0]=port;
+	path[2]=NULL;
+	
+	int i=0;
+	for(i=0; i<num; i++){
+		sprintf(countbuf,"%d",i);
+		path[1]=countbuf;
+		if(fork()==0){
+		execve("blocks",path,NULL);
+		}
+	printf("%d",i);
+	} 
+printf("Forked clients...\n");
+}
+
+
+void handle(int newsock, fd_set *set)
 {
-	int listenfd, *clientfd, port;
-	struct sockaddr_in clientaddr;
-	unsigned int clientlen;
-	fd_set active_fd_set, read_fd_set;
-	pthread_t tid;
-	int i;
+	rio_t rio_read;
+    /* send(), recv(), close() */
+    /* Call FD_CLR(newsock, set) on disconnection */
+	char buf[MAXLINE];
+	int bytecount;
 
-	/*Handling the SIGPIPE signal*/
-	Signal(SIGPIPE, SIG_IGN);
-	/*Initialize the file desc set*/
+	Rio_readinitb(&rio_read, newsock);
+	bytecount=Rio_readlineb(&rio_read,buf,MAXLINE);
+	printf("Server:%s\n",buf);
 
-	port=5000; 
-	listenfd=Open_listenfd(port);
+	sprintf(buf, "Ack.\n");
+	Rio_writen(newsock,buf,strlen(buf)+1);
+	FD_CLR(newsock,set);
+	Close(newsock);
+}
 
-	FD_ZERO (&active_fd_set);
-	FD_SET (listenfd, &active_fd_set);
+int main(void)
+{
+    int sock;
+    fd_set socks;
+    fd_set readsocks;
+    int maxsock;
+    int reuseaddr = 1; /* True */
+    struct addrinfo hints, *res;
+	int i=0;
+    /* Get the address info */
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    if (getaddrinfo(NULL, PORT, &hints, &res) != 0) {
+        perror("getaddrinfo");
+        return 1;
+    }
+
+    /* Create the socket */
+    sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+    if (sock == -1) {
+        perror("socket");
+        return 1;
+    }
+
+    /* Enable the socket to reuse the address */
+    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &reuseaddr, sizeof(int)) == -1) {
+        perror("setsockopt");
+        return 1;
+    }
+
+    /* Bind to the address */
+    if (bind(sock, res->ai_addr, res->ai_addrlen) == -1) {
+        perror("bind");
+        return 1;
+    }
+
+    freeaddrinfo(res);
+
+    /* Listen */
+    if (listen(sock, BACKLOG) == -1) {
+        perror("listen");
+        return 1;
+    }
+	printf("Listening on port:%s\n",PORT);
+    /* Set up the fd_set */
+    FD_ZERO(&socks);
+    FD_SET(sock, &socks);
+    maxsock = sock;
+	
+	fork_clients(2);	
 
 
-	if(fork ()==0){
-		sleep(2);
-		Execve("client_vm",5000);
-	}
-	else{
-		while(1){
-			 read_fd_set = active_fd_set;
-			 	if (select (FD_SETSIZE, &read_fd_set, NULL, NULL,NULL) < 0)
-					{
-						perror("select");
-						exit(EXIT_FAILURE);
-					}
-					/* Service all the sockets with input pending. */
-				for (i = 0; i < FD_SETSIZE; ++i)
-					if (FD_ISSET (i,&read_fd_set))
-					{
-						
-						
-								/* Connection request on original socket. */
-								clientlen=sizeof(clientaddr);
-								clientfd=Calloc(1,sizeof(int));
-								*clientfd=Accept(listenfd,(SA*)&clientaddr,&clientlen);
-							
-							fprintf	(stderr, "Server:connect from host %s, %port %%hd.\n",
-									 inet_ntoa (clientname.sin_addr),
-									 ntohs (clientname.sin_port));
-								FD_SET(clientfd, &active_fd_set);
-						
-					}
+	/* Main loop */
+    while (1) {
+        unsigned int s;
+        readsocks = socks;
+        if (select(maxsock + 1, &readsocks, NULL, NULL, NULL) == -1) {
+            perror("select");
+            return 1;
+        }
+        for (s = 0; s <= maxsock; s++) {
+			printf("Inside the for loop.\n");
+            if (FD_ISSET(s, &readsocks)) {
+                printf("socket %d was ready\n", s);
+                if (s == sock) {
+                    /* New connection */
+                    int newsock;
+                    struct sockaddr_in their_addr;
+                    unsigned int size = sizeof(struct sockaddr_in);
+                    newsock = accept(sock, (struct sockaddr*)&their_addr, &size);
+                   	printf("Accepted a connection.\n");
+				   	if (newsock == -1) {
+                        perror("accept");
+                    }
+                    else {
+                        printf("Got a connection from %s on port %d\n", inet_ntoa(their_addr.sin_addr), htons(their_addr.sin_port));
+			if(fork()==0){
+			handle(newsock,&socks);
+			}
+				                        
+			FD_SET(newsock, &socks);
+                        if (newsock > maxsock) {
+                            maxsock = newsock;
+                        }
+                    }
+                }
 
-		}
+            }
+        }
+
+    }
+
+    close(sock);
+
+    return 0;
+}
 
 
-	/*while(1){
-
-		clientlen=sizeof(clientaddr);
-		clientfd=Calloc(1,sizeof(int));
-		*clientfd=Accept(listenfd,
-				(SA*)
-				&clientaddr,
-				&clientlen);
-		if(*clientfd<0){
-			continue;
-		}
-		Pthread_create(&tid,
-				NULL,
-				connection,
-				clientfd);
-	}*/
