@@ -743,9 +743,7 @@ int open_clientfd(char *hostname, int port)
 	return -1; /* check errno for cause of error */
 
     /* Fill in the server's IP address and port */
-    P(&mutex);
     if ((hp = gethostbyname(hostname)) == NULL){
-    V(&mutex);
 	return -2; /* check h_errno for cause of error */
     }
     bzero((char *) &serveraddr, sizeof(serveraddr));
@@ -756,10 +754,8 @@ int open_clientfd(char *hostname, int port)
 
     /* Establish a connection with the server */
     if (connect(clientfd, (SA *) &serveraddr, sizeof(serveraddr)) < 0){
-    V(&mutex);    
 	return -1;
     }
-    V(&mutex);
     return clientfd;
 }
 /* $end open_clientfd */
