@@ -772,6 +772,7 @@ int open_clientfd(char *hostname, int port)
 int open_listenfd(int port) 
 {
     int listenfd, optval=1;
+	int rc, on=1;
     struct sockaddr_in serveraddr;
   
     /* Create a socket descriptor */
@@ -783,6 +784,14 @@ int open_listenfd(int port)
 		   (const void *)&optval , sizeof(int)) < 0)
 	return -1;
 
+
+	rc=ioctl(listenfd,FIONBIO, (char*)&on);
+	 if (rc < 0)
+   {
+      perror("ioctl() failed");
+      close(listenfd);
+      exit(-1);
+   }
     /* Listenfd will be an endpoint for all requests to port
        on any IP address for this host */
     bzero((char *) &serveraddr, sizeof(serveraddr));

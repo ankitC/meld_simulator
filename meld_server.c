@@ -110,8 +110,8 @@ sock=Open_listenfd(port);
     FD_SET(sock, &socks);
     maxsock = sock;
 	
-	fork_clients(2);	
-
+fork_clients(2);	
+	int switch1=1;
 
 	/* Main loop */
     while (1) {
@@ -121,6 +121,7 @@ sock=Open_listenfd(port);
             perror("select");
             return 1;
         }
+		printf("Finished Select, s=%d\n",maxsock);
         for (s = 0; s <= maxsock; s++) {
 			printf("Inside the for loop.\n");
             if (FD_ISSET(s, &readsocks)) {
@@ -150,7 +151,10 @@ sock=Open_listenfd(port);
 
             }
         }
-
+//	if(switch1){
+//		fork_clients(2);
+//		switch1=0;
+//	}
     }
 
     close(sock);
