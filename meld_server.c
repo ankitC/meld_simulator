@@ -42,6 +42,7 @@ void handle(int newsock, fd_set *set)
 	rio_t rio_read;
     /* send(), recv(), close() */
     /* Call FD_CLR(newsock, set) on disconnection */
+//	int newsock1=*newsock;
 	char buf[MAXLINE];
 	int bytecount;
 
@@ -51,8 +52,6 @@ void handle(int newsock, fd_set *set)
 
 	sprintf(buf, "Ack.\n");
 	Rio_writen(newsock,buf,strlen(buf)+1);
-	FD_CLR(newsock,set);
-	Close(newsock);
 }
 
 int main(void)
@@ -121,11 +120,11 @@ fork_clients(2);
             perror("select");
             return 1;
         }
-		printf("Finished Select, s=%d\n",maxsock);
+	//	printf("Finished Select, s=%d\n",maxsock);
         for (s = 0; s <= maxsock; s++) {
-			printf("Inside the for loop.\n");
+//			printf("Inside the for loop.\n");
             if (FD_ISSET(s, &readsocks)) {
-                printf("socket %d was ready\n", s);
+             //   printf("socket %d was ready\n", s);
                 if (s == sock) {
                     /* New connection */
                     int newsock;
@@ -138,15 +137,20 @@ fork_clients(2);
                     }
                     else {
                         printf("Got a connection from %s on port %d\n", inet_ntoa(their_addr.sin_addr), htons(their_addr.sin_port));
-			if(fork()==0){
-			handle(newsock,&socks);
-			}
-				                        
-			FD_SET(newsock, &socks);
+				FD_SET(newsock, &socks);
                         if (newsock > maxsock) {
                             maxsock = newsock;
                         }
-                    }
+            
+		if(fork()==0){
+			handle(newsock,&socks);
+			exit(0);
+			}
+			FD_CLR(newsock,&socks);
+			printf("closing the connection");
+			Close(newsock);
+			}          
+		        
                 }
 
             }
