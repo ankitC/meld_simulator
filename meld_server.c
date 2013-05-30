@@ -12,7 +12,7 @@
 #include <netdb.h>
 #include "csapp.h"
 
-#define PORT    "5000" /* Port to listen on */
+static int port=5000;  /* Port to listen on */
 #define BACKLOG     10  /* Passed to listen() */
 
 
@@ -68,7 +68,8 @@ int main(void)
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
-    if (getaddrinfo(NULL, PORT, &hints, &res) != 0) {
+#if 0
+if (getaddrinfo(NULL, PORT, &hints, &res) != 0) {
         perror("getaddrinfo");
         return 1;
     }
@@ -99,7 +100,11 @@ int main(void)
         perror("listen");
         return 1;
     }
-	printf("Listening on port:%s\n",PORT);
+#endif
+
+sock=Open_listenfd(port);
+
+	printf("Listening on port:%d\n",port);
     /* Set up the fd_set */
     FD_ZERO(&socks);
     FD_SET(sock, &socks);

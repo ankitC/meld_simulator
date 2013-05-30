@@ -7,7 +7,7 @@ vm_client.c : test program for forked vm block
 
 static unsigned int port = 0;
 static unsigned int block_id= 0;
-static char host[] = "192.168.30.159";
+static char host[] = "localhost";
 static char block_header[] = "block_id";
 
 
