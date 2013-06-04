@@ -146,6 +146,13 @@ sock=Open_listenfd(port);
                             maxsock = newsock;
                         }
                     }
+                }else// read from already accepted socket
+                {
+                   int check = (force_read(s));
+
+                   if(check == 0) //sock closed, remove from ur list 
+                    FD_CLR(s,&socks);    
+        
                 }
 
             }
